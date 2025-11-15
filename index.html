@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monitoramento em Tempo Real</title>
+    <style>
+        #video-container {
+            position: relative;
+            width: 640px; /* Ajuste o tamanho conforme necessário */
+            height: 480px;
+        }
+        #video, #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #overlay {
+            pointer-events: none; /* Permite interagir com elementos abaixo */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Reconhecimento de Pessoas em Tempo Real</h1>
+    <div id="video-container">
+        <video id="video" autoplay></video>
+        <canvas id="overlay"></canvas>
+    </div>
+    <p>Status: <span id="status">Desconectado</span></p>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const context = overlay.getContext('2d');
+        const statusEl = document.getElementById('status');
+        
+        // Define a taxa de quadros (FPS) para envio ao back-end (10 FPS)
+        const FPS = 10; 
+        const SERVER_URL = "ws://localhost:8000/ws/video"; // Altere se o servidor estiver em outro lugar
+
+        // 1. Acesso à Câmera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                    // Garante que o canvas tem o mesmo tamanho do vídeo
+                    overlay.width = video.videoWidth;
+                    overlay.height = video.videoHeight;
+                    
+                    // Inicia a comunicação com o WebSocket
+                    initWebSocket();
+                };
+            })
+            .catch((err) => {
+                console.error("Erro ao acessar a câmera: ", err);
+                statusEl.textContent = "Erro: Câmera não acessível.";
+            });
+
+        // 2. Comunicação WebSocket
+        function initWebSocket() {
+            const ws = new WebSocket(SERVER_URL);
+
+            ws.onopen = () => {
+                statusEl.textContent = "Conectado. Enviando frames...";
+                // Inicia o envio periódico de frames
+                setInterval(sendFrame, 1000 / FPS);
+            };
+
+            ws.onmessage = (event) => {
+                // 4. Recebe o resultado do back-end
+                const result = event.data;
+                console.log("Resultado do Backend:", result);
+                
+                // DICA: Adicionar aqui a lógica para parsear JSON e chamar drawOverlay
+                // drawOverlay(parsedResult); 
+            };
+
+            ws.onclose = () => {
+                statusEl.textContent = "Desconectado. Tentando reconectar...";
+                // Tenta reconectar após um breve período
+                setTimeout(initWebSocket, 3000); 
+            };
+
+            ws.onerror = (err) => {
+                console.error("Erro no WebSocket:", err);
+                statusEl.textContent = "Erro no WebSocket.";
+                ws.close();
+            };
+        }
+        
+        // 3. Função para Capturar e Enviar o Frame
+        function sendFrame() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // Desenha o frame atual do vídeo no canvas
+                context.drawImage(video, 0, 0, overlay.width, overlay.height);
+                
+                // Converte o canvas para Base64 (pode ser lento, otimizações são possíveis)
+                const base64Image = overlay.toDataURL('image/jpeg', 0.8); // 0.8 é a qualidade
+                
+                // Envia o Base64 via WebSocket (verifica se está aberto)
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(base64Image);
+                }
+            }
+        }
+        
+        // 5. Função para Desenhar as Caixas e Rótulos
+        function drawOverlay(results) {
+            // Limpa o canvas antes de desenhar
+            context.clearRect(0, 0, overlay.width, overlay.height);
+            
+            // Lógica para iterar sobre 'results' e desenhar:
+            /*
+            results.forEach(person => {
+                const [x, y, w, h] = person.box;
+                const name = person.nome;
+                
+                context.strokeStyle = 'red';
+                context.lineWidth = 4;
+                context.strokeRect(x, y, w, h);
+                
+                context.fillStyle = 'red';
+                context.font = '24px Arial';
+                context.fillText(name, x, y - 10);
+            });
+            */
+        }
+
+    </script>
+</body>
+</html>

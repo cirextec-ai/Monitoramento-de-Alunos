@@ -1,0 +1,15 @@
+
+Execute o servidor:
+
+Bash
+
+python main.py
+
+Ou, se preferir usar o uvicorn diretamente para o modo hot-reload:
+
+Bash
+
+uvicorn main:app --reload
+
+O seu back-end estará rodando em http://localhost:8000 
+e esperando conexões WebSocket em ws://localhost:8000/ws/video.
