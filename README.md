@@ -96,15 +96,29 @@ Estrutura de pastas recomendada:
 processed_rosto_alunos/
 └─ estagio/rostos_csv/rostos_alunos/
 
-📁 Estrutura do Repositório
-
-monitoramento-alunos/
+📁 Monitoramento-de-Alunos/
 │
-├─ processed_rosto_alunos/     # Dataset de imagens de rostos
-├─ notebooks/                  # Notebooks de preparação, treino e monitoramento
-├─ models/                     # Modelos treinados (.h5)
-├─ README.md                   # Este arquivo
-└─ requirements.txt            # Dependências do projeto
+├─ processed_rosto_alunos/            # Dataset de imagens dos alunos
+│   └─ estagio/
+│        └─ rostos_csv/
+│             └─ rostos_alunos/
+│                 ├─ aluno1_01.jpg
+│                 ├─ aluno2_01.jpg
+│                 └─ ...
+│
+├─ notebooks/                         # Notebooks Jupyter/Colab
+│    ├─ dataset_preparation.ipynb     # Criação do dataset de rostos
+│    ├─ train_model_pytorch.ipynb     # Treinamento do modelo PyTorch
+│    ├─ real_time_monitoring.ipynb    # Monitoramento em tempo real
+│
+├─ models/                            # Modelos treinados
+│    ├─ melhor_modelo_triplet.pth     # Modelo final PyTorch (.pth)
+│    └─ ...                           # Outros arquivos de modelos
+│
+├─ README.md                          # Documentação principal do projeto
+│
+└─ requirements.txt                   # Lista de dependências (torch, torchvision, opencv-python, etc.)
+
 
 📌 Observações
 
